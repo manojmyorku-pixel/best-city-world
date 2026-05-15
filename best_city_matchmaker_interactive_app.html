@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Best City in the World for Me</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #f8fafc, #e2e8f0);
+      min-height: 100vh;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-800">
+  <div class="max-w-5xl mx-auto px-4 py-10">
+    <div class="text-center mb-10">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">🌍 Best City in the World for You</h1>
+      <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+        Answer a few questions about your lifestyle preferences and discover which global cities fit you best.
+      </p>
+    </div>
+
+    <div id="quizContainer" class="bg-white rounded-3xl shadow-xl p-6 md:p-10 space-y-8 fade-in"></div>
+
+    <div class="mt-8 flex justify-between">
+      <button id="prevBtn" class="px-5 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 transition hidden">
+        Previous
+      </button>
+
+      <button id="nextBtn" class="ml-auto px-6 py-3 rounded-2xl bg-slate-900 text-white hover:opacity-90 transition">
+        Next
+      </button>
+    </div>
+
+    <div id="results" class="hidden mt-12 fade-in">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+        <div>
+          <h2 class="text-3xl font-bold">Your Top City Matches</h2>
+          <p class="text-slate-600">Based on your preferences and lifestyle priorities.</p>
+        </div>
+
+        <button onclick="restartQuiz()" class="px-5 py-3 rounded-2xl bg-slate-900 text-white hover:opacity-90 transition">
+          Retake Quiz
+        </button>
+      </div>
+
+      <div id="resultsList" class="grid gap-5"></div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        key: 'climate',
+        question: 'What climate do you prefer?',
+        options: [
+          { label: 'Cold / Four seasons', value: 1 },
+          { label: 'Mild / Temperate', value: 3 },
+          { label: 'Warm year-round', value: 5 }
+        ]
+      },
+      {
+        key: 'cost',
+        question: 'How important is affordability?',
+        options: [
+          { label: 'Not important', value: 1 },
+          { label: 'Somewhat important', value: 3 },
+          { label: 'Very important', value: 5 }
+        ]
+      },
+      {
+        key: 'walkability',
+        question: 'How walkable do you want your city to be?',
+        options: [
+          { label: 'I drive most places', value: 1 },
+          { label: 'Balanced', value: 3 },
+          { label: 'Highly walkable / transit-focused', value: 5 }
+        ]
+      },
+      {
+        key: 'nightlife',
+        question: 'How important is nightlife?',
+        options: [
+          { label: 'Not important', value: 1 },
+          { label: 'Nice to have', value: 3 },
+          { label: 'Essential', value: 5 }
+        ]
+      },
+      {
+        key: 'nature',
+        question: 'How important is access to nature?',
+        options: [
+          { label: 'Not a priority', value: 1 },
+          { label: 'Somewhat important', value: 3 },
+          { label: 'Extremely important', value: 5 }
+        ]
+      },
+      {
+        key: 'safety',
+        question: 'How important is safety and stability?',
+        options: [
+          { label: 'Moderately important', value: 1 },
+          { label: 'Important', value: 3 },
+          { label: 'Top priority', value: 5 }
+        ]
+      },
+      {
+        key: 'culture',
+        question: 'How much do you value arts, food, and culture?',
+        options: [
+          { label: 'Casual interest', value: 1 },
+          { label: 'Enjoy it regularly', value: 3 },
+          { label: 'Central to my lifestyle', value: 5 }
+        ]
+      },
+      {
+        key: 'pace',
+        question: 'What kind of city pace do you prefer?',
+        options: [
+          { label: 'Relaxed', value: 1 },
+          { label: 'Balanced', value: 3 },
+          { label: 'Fast-paced and energetic', value: 5 }
+        ]
+      },
+      {
+        key: 'international',
+        question: 'How important is international connectivity?',
+        options: [
+          { label: 'Not important', value: 1 },
+          { label: 'Somewhat important', value: 3 },
+          { label: 'Very important', value: 5 }
+        ]
+      },
+      {
+        key: 'remote',
+        question: 'What kind of work environment appeals most?',
+        options: [
+          { label: 'Laid-back / slower lifestyle', value: 1 },
+          { label: 'Hybrid balance', value: 3 },
+          { label: 'Ambitious global hub', value: 5 }
+        ]
+      }
+    ];
+
+    const cities = [
+      {
+        name: 'Tokyo',
+        country: 'Japan',
+        traits: { climate: 3, cost: 2, walkability: 5, nightlife: 5, nature: 3, safety: 5, culture: 5, pace: 5, international: 5, remote: 5 },
+        description: 'A hyper-efficient global metropolis with unmatched food, safety, and energy.'
+      },
+      {
+        name: 'Vancouver',
+        country: 'Canada',
+        traits: { climate: 3, cost: 1, walkability: 4, nightlife: 3, nature: 5, safety: 4, culture: 4, pace: 2, international: 4, remote: 3 },
+        description: 'Ideal for outdoor lovers seeking mountains, ocean access, and a relaxed lifestyle.'
+      },
+      {
+        name: 'Barcelona',
+        country: 'Spain',
+        traits: { climate: 5, cost: 3, walkability: 5, nightlife: 5, nature: 3, safety: 3, culture: 5, pace: 3, international: 4, remote: 3 },
+        description: 'A vibrant Mediterranean city blending nightlife, architecture, and beach culture.'
+      },
+      {
+        name: 'Singapore',
+        country: 'Singapore',
+        traits: { climate: 5, cost: 2, walkability: 5, nightlife: 4, nature: 3, safety: 5, culture: 4, pace: 5, international: 5, remote: 5 },
+        description: 'Ultra-clean, globally connected, and one of the safest urban centers in the world.'
+      },
+      {
+        name: 'Copenhagen',
+        country: 'Denmark',
+        traits: { climate: 1, cost: 1, walkability: 5, nightlife: 3, nature: 4, safety: 5, culture: 4, pace: 2, international: 4, remote: 3 },
+        description: 'Perfect for people prioritizing quality of life, cycling, and sustainability.'
+      },
+      {
+        name: 'Lisbon',
+        country: 'Portugal',
+        traits: { climate: 5, cost: 4, walkability: 4, nightlife: 4, nature: 4, safety: 4, culture: 4, pace: 2, international: 4, remote: 3 },
+        description: 'A sunny coastal city popular for affordability, charm, and remote work culture.'
+      },
+      {
+        name: 'Zurich',
+        country: 'Switzerland',
+        traits: { climate: 1, cost: 1, walkability: 5, nightlife: 2, nature: 5, safety: 5, culture: 4, pace: 3, international: 5, remote: 4 },
+        description: 'A pristine and stable city with world-class infrastructure and alpine access.'
+      },
+      {
+        name: 'New York City',
+        country: 'USA',
+        traits: { climate: 3, cost: 1, walkability: 5, nightlife: 5, nature: 2, safety: 3, culture: 5, pace: 5, international: 5, remote: 5 },
+        description: 'An intense, opportunity-rich city with endless culture, food, and ambition.'
+      },
+      {
+        name: 'Melbourne',
+        country: 'Australia',
+        traits: { climate: 3, cost: 2, walkability: 4, nightlife: 4, nature: 4, safety: 4, culture: 5, pace: 3, international: 4, remote: 4 },
+        description: 'Known for coffee culture, arts, sports, and exceptional livability.'
+      },
+      {
+        name: 'Seoul',
+        country: 'South Korea',
+        traits: { climate: 1, cost: 3, walkability: 5, nightlife: 5, nature: 3, safety: 4, culture: 5, pace: 5, international: 4, remote: 5 },
+        description: 'A high-energy city with cutting-edge tech, nightlife, and incredible food.'
+      },
+      {
+        name: 'Amsterdam',
+        country: 'Netherlands',
+        traits: { climate: 1, cost: 2, walkability: 5, nightlife: 4, nature: 3, safety: 4, culture: 5, pace: 3, international: 5, remote: 4 },
+        description: 'Bike-friendly, artistic, and globally connected with a progressive atmosphere.'
+      },
+      {
+        name: 'Bangkok',
+        country: 'Thailand',
+        traits: { climate: 5, cost: 5, walkability: 2, nightlife: 5, nature: 3, safety: 3, culture: 5, pace: 4, international: 4, remote: 3 },
+        description: 'An affordable megacity famous for food, nightlife, and nonstop energy.'
+      },
+      {
+        name: 'Vienna',
+        country: 'Austria',
+        traits: { climate: 1, cost: 2, walkability: 5, nightlife: 3, nature: 4, safety: 5, culture: 5, pace: 2, international: 4, remote: 3 },
+        description: 'Elegant and highly livable with exceptional transit, music, and safety.'
+      },
+      {
+        name: 'Cape Town',
+        country: 'South Africa',
+        traits: { climate: 5, cost: 4, walkability: 2, nightlife: 4, nature: 5, safety: 1, culture: 4, pace: 3, international: 3, remote: 2 },
+        description: 'Spectacular scenery and outdoor living with a vibrant creative scene.'
+      },
+      {
+        name: 'Berlin',
+        country: 'Germany',
+        traits: { climate: 1, cost: 3, walkability: 5, nightlife: 5, nature: 3, safety: 4, culture: 5, pace: 3, international: 5, remote: 4 },
+        description: 'Creative, edgy, and ideal for people drawn to arts and nightlife.'
+      },
+      {
+        name: 'Dubai',
+        country: 'UAE',
+        traits: { climate: 5, cost: 2, walkability: 1, nightlife: 5, nature: 1, safety: 5, culture: 3, pace: 5, international: 5, remote: 5 },
+        description: 'A luxury-focused international hub with year-round warmth and ambition.'
+      },
+      {
+        name: 'Mexico City',
+        country: 'Mexico',
+        traits: { climate: 3, cost: 5, walkability: 4, nightlife: 5, nature: 2, safety: 2, culture: 5, pace: 4, international: 4, remote: 3 },
+        description: 'An affordable cultural powerhouse with incredible food and urban energy.'
+      },
+      {
+        name: 'Sydney',
+        country: 'Australia',
+        traits: { climate: 5, cost: 1, walkability: 3, nightlife: 4, nature: 5, safety: 4, culture: 4, pace: 3, international: 5, remote: 4 },
+        description: 'A scenic coastal city balancing beaches, careers, and outdoor living.'
+      },
+      {
+        name: 'Prague',
+        country: 'Czech Republic',
+        traits: { climate: 1, cost: 4, walkability: 5, nightlife: 4, nature: 3, safety: 4, culture: 5, pace: 2, international: 3, remote: 3 },
+        description: 'Historic, affordable, and filled with architectural beauty and charm.'
+      },
+      {
+        name: 'Toronto',
+        country: 'Canada',
+        traits: { climate: 1, cost: 1, walkability: 4, nightlife: 4, nature: 3, safety: 4, culture: 5, pace: 4, international: 5, remote: 5 },
+        description: 'A multicultural financial hub with strong career opportunities and diversity.'
+      },
+      {
+        name: 'Auckland',
+        country: 'New Zealand',
+        traits: { climate: 3, cost: 2, walkability: 2, nightlife: 2, nature: 5, safety: 5, culture: 3, pace: 1, international: 3, remote: 2 },
+        description: 'Great for people who prioritize nature, safety, and a calmer pace of life.'
+      },
+      {
+        name: 'Paris',
+        country: 'France',
+        traits: { climate: 3, cost: 1, walkability: 5, nightlife: 4, nature: 2, safety: 3, culture: 5, pace: 4, international: 5, remote: 4 },
+        description: 'World-famous for cuisine, art, architecture, and urban sophistication.'
+      }
+    ];
+
+    let currentQuestion = 0;
+    const answers = {};
+
+    const quizContainer = document.getElementById('quizContainer');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const results = document.getElementById('results');
+    const resultsList = document.getElementById('resultsList');
+
+    function renderQuestion() {
+      const q = questions[currentQuestion];
+
+      quizContainer.innerHTML = `
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+              Question ${currentQuestion + 1} of ${questions.length}
+            </span>
+            <span class="text-sm text-slate-400">
+              ${Math.round(((currentQuestion + 1) / questions.length) * 100)}%
+            </span>
+          </div>
+
+          <div class="w-full bg-slate-200 rounded-full h-3 mb-8 overflow-hidden">
+            <div class="bg-slate-900 h-3 rounded-full transition-all duration-300" style="width:${((currentQuestion + 1) / questions.length) * 100}%"></div>
+          </div>
+
+          <h2 class="text-2xl md:text-3xl font-bold mb-8">
+            ${q.question}
+          </h2>
+
+          <div class="grid gap-4">
+            ${q.options.map(option => `
+              <button
+                class="answer-btn text-left border-2 rounded-2xl p-5 hover:border-slate-900 hover:bg-slate-50 transition ${answers[q.key] === option.value ? 'border-slate-900 bg-slate-100' : 'border-slate-200'}"
+                data-value="${option.value}"
+              >
+                <div class="font-semibold text-lg">${option.label}</div>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      document.querySelectorAll('.answer-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          answers[q.key] = Number(btn.dataset.value);
+          renderQuestion();
+        });
+      });
+
+      prevBtn.classList.toggle('hidden', currentQuestion === 0);
+
+      nextBtn.textContent = currentQuestion === questions.length - 1
+        ? 'See Results'
+        : 'Next';
+    }
+
+    nextBtn.addEventListener('click', () => {
+      const q = questions[currentQuestion];
+
+      if (!answers[q.key]) {
+        alert('Please select an answer before continuing.');
+        return;
+      }
+
+      if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (currentQuestion > 0) {
+        currentQuestion--;
+        renderQuestion();
+      }
+    });
+
+    function calculateScore(city) {
+      let totalDiff = 0;
+      const maxDiff = questions.length * 4;
+
+      questions.forEach(q => {
+        totalDiff += Math.abs(answers[q.key] - city.traits[q.key]);
+      });
+
+      const score = Math.round((1 - totalDiff / maxDiff) * 100);
+      return Math.max(score, 0);
+    }
+
+    function getReason(city) {
+      const highlights = [];
+
+      if (city.traits.walkability >= 4) highlights.push('excellent walkability');
+      if (city.traits.nature >= 4) highlights.push('strong access to nature');
+      if (city.traits.nightlife >= 4) highlights.push('vibrant nightlife');
+      if (city.traits.safety >= 4) highlights.push('high safety');
+      if (city.traits.culture >= 4) highlights.push('rich cultural life');
+      if (city.traits.cost >= 4) highlights.push('relative affordability');
+
+      const selected = highlights.slice(0, 2).join(' and ');
+
+      return `${city.description} Especially strong for ${selected}.`;
+    }
+
+    function showResults() {
+      quizContainer.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+      prevBtn.classList.add('hidden');
+      results.classList.remove('hidden');
+
+      const ranked = cities
+        .map(city => ({
+          ...city,
+          score: calculateScore(city)
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+
+      resultsList.innerHTML = ranked.map((city, index) => `
+        <div class="bg-white rounded-3xl shadow-lg p-6 border border-slate-100">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <span class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">
+                  ${index + 1}
+                </span>
+
+                <div>
+                  <h3 class="text-2xl font-bold">${city.name}</h3>
+                  <p class="text-slate-500">${city.country}</p>
+                </div>
+              </div>
+
+              <p class="text-slate-700 leading-relaxed max-w-2xl">
+                ${getReason(city)}
+              </p>
+            </div>
+
+            <div class="text-center min-w-[120px]">
+              <div class="text-4xl font-bold text-slate-900">${city.score}%</div>
+              <div class="text-slate-500 text-sm mt-1">Match Score</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+
+      Object.keys(answers).forEach(key => delete answers[key]);
+
+      results.classList.add('hidden');
+      quizContainer.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      prevBtn.classList.remove('hidden');
+
+      renderQuestion();
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
